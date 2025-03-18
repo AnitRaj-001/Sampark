@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "878948008178",
+    "project_id": "sampark-bb2d7",
+    "storage_bucket": "sampark-bb2d7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:878948008178:android:fd0d62257950a26f56106b",
+        "android_client_info": {
+          "package_name": "com.example.sampark"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7vZ2rk85xlsAD2t4kLgj72xjlgiixpMg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
