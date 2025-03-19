@@ -1,7 +1,5 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class CustomTextfield extends StatefulWidget {
   final String userId;
@@ -15,6 +13,72 @@ class CustomTextfield extends StatefulWidget {
 
 class _CustomTextfieldState extends State<CustomTextfield> {
   TextEditingController _controller = TextEditingController();
+
+  Future<void> _sendMessage(String message, String type) async {
+    if (message.isEmpty) return;
+    _controller.clear();
+    await _addMessageToFirestore(message, type);
+  }
+
+  Future<void> _addMessageToFirestore(String content, String type) async {
+    try {
+      print('Sending message from ${widget.userId} to ${widget.friendId}');
+      // Sender's chat
+      await FirebaseFirestore.instance
+          .collection('user')
+          .doc(widget.userId)
+          .collection('messages')
+          .doc(widget.friendId)
+          .collection('chats')
+          .add({
+        "senderId": widget.userId,
+        "receiverId": widget.friendId,
+        "message": content,
+        "type": type,
+        "date": DateTime.now(),
+      });
+
+      await FirebaseFirestore.instance
+          .collection('user')
+          .doc(widget.userId)
+          .collection('messages')
+          .doc(widget.friendId)
+          .set({
+        'last_msg': content,
+        'date': DateTime.now(),
+      }, SetOptions(merge: true));
+
+      // Receiver's chat
+      await FirebaseFirestore.instance
+          .collection('user')
+          .doc(widget.friendId)
+          .collection('messages')
+          .doc(widget.userId)
+          .collection('chats')
+          .add({
+        "senderId": widget.userId,
+        "receiverId": widget.friendId,
+        "message": content,
+        "type": type,
+        "date": DateTime.now(),
+      });
+
+      await FirebaseFirestore.instance
+          .collection('user')
+          .doc(widget.friendId)
+          .collection('messages')
+          .doc(widget.userId)
+          .set({
+        'last_msg': content,
+        'date': DateTime.now(),
+      }, SetOptions(merge: true));
+
+      print('Message sent successfully');
+    } catch (e) {
+      print('Error sending message: $e');
+      rethrow;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +102,6 @@ class _CustomTextfieldState extends State<CustomTextfield> {
                   border: OutlineInputBorder(
                     borderSide: const BorderSide(width: 0, color: Colors.white),
                     borderRadius: BorderRadius.circular(26),
-                    gapPadding: 10,
                   ),
                 ),
               ),
@@ -51,67 +114,16 @@ class _CustomTextfieldState extends State<CustomTextfield> {
                   color: Colors.yellow,
                   borderRadius: BorderRadius.circular(26),
                 ),
-                child: const Icon(
-                  Icons.send,
-                  color: Colors.white,
-                ),
+                child: const Icon(Icons.send, color: Colors.white),
               ),
               onTap: () async {
-                String message = _controller.text.trim();
-                if (message.isEmpty) return; // Prevent sending empty messages
-                _controller.clear();
-
-                // Add the message to the sender's chats collection
-                await FirebaseFirestore.instance
-                    .collection('user')
-                    .doc(widget.userId)
-                    .collection('messages')
-                    .doc(widget.friendId)
-                    .collection('chats')
-                    .add({
-                  "senderId": widget.userId,
-                  "reciverId": widget.friendId, // Fix typo: receiverId
-                  "message": message,
-                  "type": "text", // Use a meaningful type instead of "type"
-                  "date": DateTime.now(),
-                });
-
-                // Update last message for sender
-                await FirebaseFirestore.instance
-                    .collection('user') // Fix typo: 'users' -> 'user' to match your structure
-                    .doc(widget.userId)
-                    .collection('messages')
-                    .doc(widget.friendId)
-                    .set({
-                  'last_msg': message,
-                  'date': DateTime.now(), // Optional: for sorting
-                }, SetOptions(merge: true));
-
-                // Add the message to the receiver's chats collection
-                await FirebaseFirestore.instance
-                    .collection('user')
-                    .doc(widget.friendId)
-                    .collection('messages')
-                    .doc(widget.userId)
-                    .collection('chats')
-                    .add({
-                  "senderId": widget.userId,
-                  "reciverId": widget.friendId, // Fix typo: receiverId
-                  "message": message,
-                  "type": "text",
-                  "date": DateTime.now(),
-                });
-
-                // Update last message for receiver
-                await FirebaseFirestore.instance
-                    .collection('user')
-                    .doc(widget.friendId)
-                    .collection('messages')
-                    .doc(widget.userId)
-                    .set({
-                  'last_msg': message,
-                  'date': DateTime.now(), // Optional: for sorting
-                }, SetOptions(merge: true));
+                try {
+                  await _sendMessage(_controller.text, 'text');
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to send message: $e')),
+                  );
+                }
               },
             ),
           ],

@@ -26,10 +26,11 @@ class _SearchScreenState extends State<SearchScreen> {
     });
 
     try {
+      print('Searching for users with name starting: $query');
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('users')
           .where('name', isGreaterThanOrEqualTo: query)
-          .where('name', isLessThan: query + '\uf8ff')
+          .where('name', isLessThanOrEqualTo: query + '\uf8ff')
           .get();
 
       List<Map<String, dynamic>> users = querySnapshot.docs
@@ -37,14 +38,17 @@ class _SearchScreenState extends State<SearchScreen> {
           .where((user) => user['email'] != widget.user.email)
           .toList();
 
+      print('Found ${users.length} users');
       setState(() {
         searchResult = users;
         isLoading = false;
       });
     } catch (e) {
+      print('Search error: $e');
       setState(() => isLoading = false);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
     }
   }
 
