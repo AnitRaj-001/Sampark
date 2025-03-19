@@ -13,6 +13,8 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
 
   Future<Widget> userSignedIn() async {
     User? user = FirebaseAuth.instance.currentUser;

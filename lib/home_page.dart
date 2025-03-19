@@ -10,7 +10,7 @@ import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
   final UserModel user;
-  HomePage(this.user, {super.key});
+  const HomePage(this.user, {super.key});
 
   @override
   State<StatefulWidget> createState() {

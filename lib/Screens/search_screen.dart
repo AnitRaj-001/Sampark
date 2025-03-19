@@ -30,7 +30,7 @@ class _SearchScreenState extends State<SearchScreen> {
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('users')
           .where('name', isGreaterThanOrEqualTo: query)
-          .where('name', isLessThanOrEqualTo: query + '\uf8ff')
+          .where('name', isLessThanOrEqualTo: '$query\uf8ff')
           .get();
 
       List<Map<String, dynamic>> users = querySnapshot.docs

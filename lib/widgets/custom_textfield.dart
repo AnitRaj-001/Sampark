@@ -12,7 +12,7 @@ class CustomTextfield extends StatefulWidget {
 }
 
 class _CustomTextfieldState extends State<CustomTextfield> {
-  TextEditingController _controller = TextEditingController();
+  final TextEditingController _controller = TextEditingController();
 
   Future<void> _sendMessage(String message, String type) async {
     if (message.isEmpty) return;
@@ -23,7 +23,6 @@ class _CustomTextfieldState extends State<CustomTextfield> {
   Future<void> _addMessageToFirestore(String content, String type) async {
     try {
       print('Sending message from ${widget.userId} to ${widget.friendId}');
-      // Sender's chat
       await FirebaseFirestore.instance
           .collection('user')
           .doc(widget.userId)
@@ -48,7 +47,6 @@ class _CustomTextfieldState extends State<CustomTextfield> {
         'date': DateTime.now(),
       }, SetOptions(merge: true));
 
-      // Receiver's chat
       await FirebaseFirestore.instance
           .collection('user')
           .doc(widget.friendId)
