@@ -1,85 +1,14 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-
-class CustomTextfield extends StatefulWidget {
-  final String userId;
-  final String friendId;
-
-  const CustomTextfield(this.userId, this.friendId, {super.key});
-
-  @override
-  State<CustomTextfield> createState() => _CustomTextfieldState();
-}
-
-class _CustomTextfieldState extends State<CustomTextfield> {
-  final TextEditingController _controller = TextEditingController();
-
-  Future<void> _sendMessage(String message, String type) async {
-    if (message.isEmpty) return;
-    _controller.clear();
-    await _addMessageToFirestore(message, type);
-  }
-
-  Future<void> _addMessageToFirestore(String content, String type) async {
-    try {
-      print('Sending message from ${widget.userId} to ${widget.friendId}');
-      await FirebaseFirestore.instance
-          .collection('user')
-          .doc(widget.userId)
-          .collection('messages')
-          .doc(widget.friendId)
-          .collection('chats')
-          .add({
-        "senderId": widget.userId,
-        "receiverId": widget.friendId,
-        "message": content,
-        "type": type,
-        "date": DateTime.now(),
-      });
-
-      await FirebaseFirestore.instance
-          .collection('user')
-          .doc(widget.userId)
-          .collection('messages')
-          .doc(widget.friendId)
-          .set({
-        'last_msg': content,
-        'date': DateTime.now(),
-      }, SetOptions(merge: true));
-
-      await FirebaseFirestore.instance
-          .collection('user')
-          .doc(widget.friendId)
-          .collection('messages')
-          .doc(widget.userId)
-          .collection('chats')
-          .add({
-        "senderId": widget.userId,
-        "receiverId": widget.friendId,
-        "message": content,
-        "type": type,
-        "date": DateTime.now(),
-      });
-
-      await FirebaseFirestore.instance
-          .collection('user')
-          .doc(widget.friendId)
-          .collection('messages')
-          .doc(widget.userId)
-          .set({
-        'last_msg': content,
-        'date': DateTime.now(),
-      }, SetOptions(merge: true));
-
-      print('Message sent successfully');
-    } catch (e) {
-      print('Error sending message: $e');
-      rethrow;
-    }
-  }
+import 'package:get/get.dart';
+import 'package:sampark/controller/chat_controller.dart';
+class CustomTextfield extends StatelessWidget {
+  final ChatController controller;
+  const CustomTextfield(this.controller, {super.key});
 
   @override
   Widget build(BuildContext context) {
+    final textController = TextEditingController();
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey[300],
@@ -92,7 +21,7 @@ class _CustomTextfieldState extends State<CustomTextfield> {
           children: [
             Expanded(
               child: TextField(
-                controller: _controller,
+                controller: textController,
                 decoration: InputDecoration(
                   hintText: 'Type your message here...',
                   fillColor: Colors.grey[200],
@@ -106,6 +35,14 @@ class _CustomTextfieldState extends State<CustomTextfield> {
             ),
             const SizedBox(width: 10),
             GestureDetector(
+              onTap: () async {
+                try {
+                  await controller.sendMessage(textController.text, 'text');
+                  textController.clear();
+                } catch (e) {
+                  Get.snackbar('Error', 'Failed to send message: $e');
+                }
+              },
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
@@ -114,15 +51,6 @@ class _CustomTextfieldState extends State<CustomTextfield> {
                 ),
                 child: const Icon(Icons.send, color: Colors.white),
               ),
-              onTap: () async {
-                try {
-                  await _sendMessage(_controller.text, 'text');
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to send message: $e')),
-                  );
-                }
-              },
             ),
           ],
         ),
